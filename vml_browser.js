@@ -807,8 +807,12 @@ function selectElement(e, updateHistory) {
       }
     }
   }
-  if (vmlFile != null && updateHistory) {
-    history.pushState(null, "", vmlBrowserUrl + "?file=" + vmlFile + "&select=" + vmlSelect.join(","));
+  if (customerMode() && updateHistory) {
+    history.pushState(null, "", vmlBrowserUrl + "?select=" + vmlSelect.join(","));
+  } else {
+    if (vmlFile != null && updateHistory) {
+      history.pushState(null, "", vmlBrowserUrl + "?file=" + vmlFile + "&select=" + vmlSelect.join(","));
+    }
   }
   createValueTable(node, ids.length - 1);
 }
@@ -1126,6 +1130,20 @@ function initVML(select) {
 
 function parseUrl() {
   var parts = document.location.href.split("?");
+
+  if (customerMode()) {
+    // No file in URL, but "?select=<target>[,<grp>[,<reg>[,<fld>]]]" may be present.
+    if (parts.length == 2) {
+      var args = parts[1].split("&");
+       if (args.length == 1) {
+         if (args[0].substr(0, 7) == "select=") {
+           vmlSelect = args[0].substr(7).toLowerCase().split(",");
+         }
+       }
+    }
+    return;
+  }  
+
   if (parts.length == 2) {
     var args = parts[1].split("&");
     if (args.length == 1 || args.length == 2) {
@@ -1212,9 +1230,7 @@ function getVMLFilename() {
 
 function loadVMLFile(file, select) {
   vml = null;
-  if (!customerMode()) {
-    vmlBrowserUrl = document.location.href.split("?")[0];
-  }
+  vmlBrowserUrl = document.location.href.split("?")[0];
   vmlFile = file;
   vmlSelect = [];
   vml = loadXMLDoc(file);
@@ -1228,6 +1244,7 @@ function loadVMLFile(file, select) {
 
 function checkVMLFilenameInput() {
   if (customerMode()) {
+    parseUrl();
     loadVMLFile(null, vmlSelect);
     if (vml != null) {
       return true;
