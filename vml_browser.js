@@ -72,6 +72,10 @@ function asText(name) {
     
     "vml_target_size":           "Target size",
   };
+  if (!customerMode()) {
+    translator["max_repl_cnt"] = "Max replication count";
+    translator["max_width"]    = "Max width";
+  }
   var postfix = "";
   if (name.substr(-5) == "_orig") {
     name = name.substr(0, name.lastIndexOf("_orig"));
@@ -807,13 +811,22 @@ function selectElement(e, updateHistory) {
       }
     }
   }
+
+  var updated_url;
   if (customerMode() && updateHistory) {
-    history.pushState(null, "", vmlBrowserUrl + "?select=" + vmlSelect.join(","));
+    updated_url = vmlBrowserUrl + "?select=" + vmlSelect.join(",");
   } else {
     if (vmlFile != null && updateHistory) {
-      history.pushState(null, "", vmlBrowserUrl + "?file=" + vmlFile + "&select=" + vmlSelect.join(","));
+      updated_url = vmlBrowserUrl + "?file=" + vmlFile + "&select=" + vmlSelect.join(",");
     }
   }
+  if (updated_url) {
+    // Remove any ranges from URL, since the square brackets causes references not to work correctly
+    // after having been pasted into Outlook, Word, ...
+    updated_url = updated_url.replace(/\[[\d\-\,]+\]/g, "");
+    history.pushState(null, "", updated_url);
+  }
+
   createValueTable(node, ids.length - 1);
 }
 
